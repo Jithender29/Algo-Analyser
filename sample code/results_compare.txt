@@ -1,0 +1,9 @@
+size,algorithm,time_seconds,peak_memory_kb
+100,bubble,0.000420,0.11
+100,insertion,0.000180,0.08
+500,bubble,0.105202,0.23
+500,insertion,0.048669,0.14
+1000,bubble,0.652402,0.26
+1000,insertion,0.308965,0.14
+2000,bubble,3.100560,0.26
+2000,insertion,1.523334,0.14
