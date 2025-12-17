@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Algo Analyser – Input Form</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      background: #020617;
+      margin: 2rem;
+      padding: 2rem 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.8);
+      max-width: 900px;
+      width: 100%;
+      border: 1px solid #1f2937;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      color: #f9fafb;
+    }
+    p.description {
+      margin-top: 0.25rem;
+      margin-bottom: 1.5rem;
+      color: #9ca3af;
+      font-size: 0.95rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #e5e7eb;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    select, button {
+      border-radius: 0.5rem;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.95rem;
+      outline: none;
+      box-shadow: 0 0 0 1px transparent;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+    select:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+    }
+    select[multiple] {
+      min-height: 120px;
+    }
+    .select-all-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.1rem;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    .select-all-row input[type="checkbox"]:disabled + span {
+      opacity: 0.4;
+    }
+    button {
+      margin-top: 2rem;
+      background: linear-gradient(to right, #22c55e, #16a34a);
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background: linear-gradient(to right, #16a34a, #15803d);
+    }
+    .output {
+      margin-top: 1.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #1f2937;
+      font-size: 0.9rem;
+      color: #d1d5db;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Algorithm Configuration</h1>
+    <p class="description">
+      Choose the algorithm type and related options. Only one <strong>Select All</strong> can be active across
+      Algorithms, Data Storage, and Type of Data.
+    </p>
+
+    <form id="algoForm">
+      <div class="grid">
+        <!-- Algorithm Type (single select) -->
+        <div class="field">
+          <label for="algorithmType">Algorithm Type</label>
+          <select id="algorithmType" name="algorithmType">
+            <option value="">-- Select Algorithm Type --</option>
+            <option value="sorting">Sorting</option>
+            <option value="searching">Searching</option>
+            <option value="graph">Graph</option>
+          </select>
+          <span class="hint">This controls which algorithms appear in the list.</span>
+        </div>
+
+        <!-- Algorithms (multi-select) -->
+        <div class="field">
+          <label for="algorithms">Algorithms</label>
+          <select id="algorithms" name="algorithms" multiple></select>
+          <div class="select-all-row">
+            <input type="checkbox" id="selectAllAlgorithms" />
+            <span>Select ALL Algorithms</span>
+          </div>
+          <span class="hint">Use Ctrl/Shift to select multiple items.</span>
+        </div>
+
+        <!-- Data Storage Type (multi-select) -->
+        <div class="field">
+          <label for="storageType">Data Storage Type</label>
+          <select id="storageType" name="storageType" multiple>
+            <option value="array">Array</option>
+            <option value="linked_list">Linked List</option>
+            <option value="vector">Vector</option>
+            <option value="list">List</option>
+          </select>
+          <div class="select-all-row">
+            <input type="checkbox" id="selectAllStorage" />
+            <span>Select ALL Storage Types</span>
+          </div>
+          <span class="hint">Choose where your data is stored in memory.</span>
+        </div>
+
+        <!-- Type of Data (multi-select) -->
+        <div class="field">
+          <label for="dataType">Type of Data</label>
+          <select id="dataType" name="dataType" multiple>
+            <option value="random">Random</option>
+            <option value="sorted">Sorted</option>
+            <option value="reversed">Reversed</option>
+            <option value="nearly_sorted">Nearly Sorted</option>
+          </select>
+          <div class="select-all-row">
+            <input type="checkbox" id="selectAllDataType" />
+            <span>Select ALL Data Types</span>
+          </div>
+          <span class="hint">This represents the input distribution.</span>
+        </div>
+
+        <!-- Data Type of elements (single select) -->
+        <div class="field">
+          <label for="valueType">Data Type</label>
+          <select id="valueType" name="valueType">
+            <option value="int">Integer</option>
+            <option value="float">Float</option>
+            <option value="char">Character</option>
+            <option value="string">String</option>
+          </select>
+          <span class="hint">Type of each element in the input.</span>
+        </div>
+      </div>
+
+      <button type="submit">Submit Configuration</button>
+
+      <div id="output" class="output"></div>
+
+      <!-- Inline charts -->
+      <div id="timeChart" style="margin-top: 1.5rem;"></div>
+      <div id="memoryChart" style="margin-top: 1.5rem;"></div>
+    </form>
+  </div>
+
+  <script>
+    // ----- DATA -----
+    const ALGORITHMS_BY_TYPE = {
+      sorting: [
+        { value: "bubble", label: "Bubble Sort" },
+        { value: "selection", label: "Selection Sort" },
+        { value: "insertion", label: "Insertion Sort" },
+        { value: "merge", label: "Merge Sort" },
+        { value: "quick", label: "Quick Sort" },
+        { value: "heap", label: "Heap Sort" },
+      ],
+      searching: [
+        { value: "linear", label: "Linear Search" },
+        { value: "binary", label: "Binary Search" },
+        { value: "jump", label: "Jump Search" },
+        { value: "interpolation", label: "Interpolation Search" },
+      ],
+      graph: [
+        { value: "bfs", label: "Breadth-First Search (BFS)" },
+        { value: "dfs", label: "Depth-First Search (DFS)" },
+        { value: "dijkstra", label: "Dijkstra" },
+        { value: "prims", label: "Prim's" },
+        { value: "kruskal", label: "Kruskal's" },
+      ],
+    };
+
+    // ----- ELEMENTS -----
+    const algorithmTypeSelect = document.getElementById("algorithmType");
+    const algorithmsSelect = document.getElementById("algorithms");
+    const storageTypeSelect = document.getElementById("storageType");
+    const dataTypeSelect = document.getElementById("dataType");
+    const valueTypeSelect = document.getElementById("valueType");
+
+    const selectAllAlgorithms = document.getElementById("selectAllAlgorithms");
+    const selectAllStorage = document.getElementById("selectAllStorage");
+    const selectAllDataType = document.getElementById("selectAllDataType");
+
+    const form = document.getElementById("algoForm");
+    const output = document.getElementById("output");
+    const timeChartEl = document.getElementById("timeChart");
+    const memoryChartEl = document.getElementById("memoryChart");
+
+    // ----- HELPER FUNCTIONS -----
+    function populateAlgorithms(type) {
+      algorithmsSelect.innerHTML = "";
+      if (!type || !ALGORITHMS_BY_TYPE[type]) return;
+      for (const alg of ALGORITHMS_BY_TYPE[type]) {
+        const opt = document.createElement("option");
+        opt.value = alg.value;
+        opt.textContent = alg.label;
+        algorithmsSelect.appendChild(opt);
+      }
+      // When type changes, reset Select All state for algorithms
+      selectAllAlgorithms.checked = false;
+    }
+
+    function setAllOptionsSelected(selectEl, isSelected) {
+      Array.from(selectEl.options).forEach((opt) => {
+        opt.selected = isSelected;
+      });
+    }
+
+    // Keeps checkboxes mutually exclusive in terms of "Select All"
+    function updateSelectAllLocking() {
+      const anyChecked =
+        selectAllAlgorithms.checked ||
+        selectAllStorage.checked ||
+        selectAllDataType.checked;
+
+      // If one is checked, disable the others (but don't uncheck them)
+      // If none is checked, re-enable all
+      if (anyChecked) {
+        const lockedId = selectAllAlgorithms.checked
+          ? "algorithms"
+          : selectAllStorage.checked
+          ? "storage"
+          : "dataType";
+
+        selectAllAlgorithms.disabled = lockedId !== "algorithms";
+        selectAllStorage.disabled = lockedId !== "storage";
+        selectAllDataType.disabled = lockedId !== "dataType";
+      } else {
+        selectAllAlgorithms.disabled = false;
+        selectAllStorage.disabled = false;
+        selectAllDataType.disabled = false;
+      }
+    }
+
+    function handleSelectAllChange(group) {
+      if (group === "algorithms") {
+        if (selectAllAlgorithms.checked) {
+          setAllOptionsSelected(algorithmsSelect, true);
+        }
+      } else if (group === "storage") {
+        if (selectAllStorage.checked) {
+          setAllOptionsSelected(storageTypeSelect, true);
+        }
+      } else if (group === "dataType") {
+        if (selectAllDataType.checked) {
+          setAllOptionsSelected(dataTypeSelect, true);
+        }
+      }
+      updateSelectAllLocking();
+    }
+
+    function syncCheckboxWithSelection(selectEl, checkbox) {
+      // If not all options are selected, uncheck the Select All for that group
+      const opts = Array.from(selectEl.options);
+      const allSelected =
+        opts.length > 0 && opts.every((opt) => opt.selected === true);
+      if (!allSelected && checkbox.checked) {
+        checkbox.checked = false;
+        updateSelectAllLocking();
+      }
+    }
+
+    function renderCharts(results) {
+      if (!Array.isArray(results) || results.length === 0) {
+        timeChartEl.innerHTML = "";
+        memoryChartEl.innerHTML = "";
+        return;
+      }
+
+      // Group by label for separate lines
+      const groups = {};
+      for (const row of results) {
+        const key = row.label || "series";
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(row);
+      }
+
+      const timeTraces = [];
+      const memTraces = [];
+
+      Object.keys(groups).forEach((label) => {
+        const rows = groups[label].slice().sort((a, b) => a.n - b.n);
+        const x = rows.map((r) => r.n);
+        const yTime = rows.map((r) => r.time_seconds);
+        const yMem = rows.map((r) => r.memory_rss_kb);
+
+        timeTraces.push({
+          x,
+          y: yTime,
+          mode: "lines+markers",
+          name: label,
+        });
+
+        memTraces.push({
+          x,
+          y: yMem,
+          mode: "lines+markers",
+          name: label,
+        });
+      });
+
+      const timeLayout = {
+        title: "Time vs Input Size (n)",
+        xaxis: { title: "Input size (n)" },
+        yaxis: { title: "Time (seconds)" },
+      };
+
+      const memLayout = {
+        title: "Memory (RSS KB) vs Input Size (n)",
+        xaxis: { title: "Input size (n)" },
+        yaxis: { title: "Memory (KB)" },
+      };
+
+      Plotly.newPlot(timeChartEl, timeTraces, timeLayout, { responsive: true });
+      Plotly.newPlot(memoryChartEl, memTraces, memLayout, { responsive: true });
+    }
+
+    // ----- EVENT LISTENERS -----
+    algorithmTypeSelect.addEventListener("change", (e) => {
+      populateAlgorithms(e.target.value);
+    });
+
+    selectAllAlgorithms.addEventListener("change", () =>
+      handleSelectAllChange("algorithms")
+    );
+    selectAllStorage.addEventListener("change", () =>
+      handleSelectAllChange("storage")
+    );
+    selectAllDataType.addEventListener("change", () =>
+      handleSelectAllChange("dataType")
+    );
+
+    algorithmsSelect.addEventListener("change", () =>
+      syncCheckboxWithSelection(algorithmsSelect, selectAllAlgorithms)
+    );
+    storageTypeSelect.addEventListener("change", () =>
+      syncCheckboxWithSelection(storageTypeSelect, selectAllStorage)
+    );
+    dataTypeSelect.addEventListener("change", () =>
+      syncCheckboxWithSelection(dataTypeSelect, selectAllDataType)
+    );
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const algorithmType = algorithmTypeSelect.value || null;
+      const algorithms = Array.from(algorithmsSelect.selectedOptions).map(
+        (o) => o.value
+      );
+      const storageTypes = Array.from(storageTypeSelect.selectedOptions).map(
+        (o) => o.value
+      );
+      const dataTypes = Array.from(dataTypeSelect.selectedOptions).map(
+        (o) => o.value
+      );
+      const valueType = valueTypeSelect.value || "int";
+
+      const result = {
+        algorithmType,
+        algorithms,
+        storageTypes,
+        dataTypes,
+        valueType,
+        selectAll: {
+          algorithms: selectAllAlgorithms.checked,
+          storageTypes: selectAllStorage.checked,
+          dataTypes: selectAllDataType.checked,
+        },
+      };
+
+      output.textContent = "Running benchmarks, please wait...";
+      timeChartEl.innerHTML = "";
+      memoryChartEl.innerHTML = "";
+
+      fetch("http://127.0.0.1:5000/save-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            output.textContent =
+              (data.message || "Configuration saved successfully.") +
+              "\n\n" +
+              "Configuration:\n" +
+              JSON.stringify(result, null, 2);
+            if (Array.isArray(data.results)) {
+              renderCharts(data.results);
+            }
+          } else {
+            output.textContent = "Failed to save configuration: " + data.error;
+          }
+        })
+        .catch((err) => {
+          output.textContent = "Error while saving configuration: " + err;
+        });
+    });
+
+    // Initialize algorithms list empty
+    populateAlgorithms("");
+  </script>
+</body>
+</html>
