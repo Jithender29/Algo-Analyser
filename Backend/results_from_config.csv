@@ -1,0 +1,11 @@
+n,algorithm_type,algorithm,storage_type,data_type,value_type,label,time_seconds,memory_rss_kb,tracemalloc_peak_kb
+10,sorting,bubble,array,random,int,sorting:bubble | array | random | int,4.980000085197389e-05,88084.0,0.2421875
+50,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.00016479999976581894,88084.0,0.5546875
+100,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.00042659999962779693,88088.0,0.9453125
+200,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.0009724999999889405,88092.0,1.7265625
+300,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.006535900000017136,88104.0,2.62890625
+400,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.036041499999555526,88112.0,3.41015625
+600,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.16287689999990107,88128.0,5.62890625
+1000,sorting,bubble,array,random,int,sorting:bubble | array | random | int,0.5962775000007241,88276.0,13.0068359375
+1400,sorting,bubble,array,random,int,sorting:bubble | array | random | int,1.5619120999999723,88332.0,23.5009765625
+1800,sorting,bubble,array,random,int,sorting:bubble | array | random | int,2.7926790000001347,88448.0,31.029296875
