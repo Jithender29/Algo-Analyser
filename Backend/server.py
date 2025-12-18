@@ -8,7 +8,8 @@ import run_from_configs
 
 # Directories
 BACKEND_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BACKEND_DIR.parent / "frontend"  # renamed folder
+# NOTE: The actual folder name in the repo is "FrontEnd" (case-sensitive on Linux/macOS)
+FRONTEND_DIR = BACKEND_DIR.parent / "FrontEnd"
 
 app = Flask(__name__)
 
