@@ -5,6 +5,9 @@ and generate interactive n vs time and n vs memory plots.
 - Supports Algorithm Type = "sorting" with:
     - "bubble"    -> Bubble Sort
     - "insertion" -> Insertion Sort
+    - "counting"  -> Counting Sort
+    - "radix"     -> Radix Sort
+    - "bucket"    -> Bucket Sort
 - Data types: "random", "sorted", "reversed", "nearly_sorted".
 - Data storage type is only used as a label (algorithms use Python lists).
 """
@@ -33,7 +36,7 @@ import psutil  # type: ignore
 import pandas as pd  # type: ignore
 import plotly.express as px  # type: ignore
 
-from Algorithms.Sorting import SORTING_ALGOS
+from Backend.algorithms.Sorting import SORTING_ALGOS
 
 
 BASE_DIR = Path(__file__).resolve().parent
