@@ -389,6 +389,87 @@
       syncCheckboxWithSelection(dataTypeSelect, selectAllDataType)
     );
 
+    // ----- SIMPLE CLIENT-SIDE BENCHMARK SIMULATION -----
+    // This does NOT run real Python benchmarks; it approximates
+    // time / memory using simple complexity-based formulas so the
+    // page can work by just opening ui.html (no backend needed).
+    function simulateBenchmarks(config) {
+      const ns = [100, 500, 1000, 5000, 10000];
+
+      // Very rough complexity hints per algorithm
+      const complexity = {
+        bubble: "n2",
+        selection: "n2",
+        insertion: "n2",
+        merge: "nlogn",
+        quick: "nlogn",
+        heap: "nlogn",
+        linear: "n",
+        binary: "logn",
+        jump: "sqrt",
+        interpolation: "logn",
+        bfs: "nplusm",
+        dfs: "nplusm",
+        dijkstra: "nlogn",
+        prims: "n2",
+        kruskal: "nlogn",
+      };
+
+      function complexityFactor(type, n) {
+        switch (type) {
+          case "n2":
+            return n * n;
+          case "nlogn":
+            return n * Math.log2(n);
+          case "logn":
+            return Math.log2(n);
+          case "sqrt":
+            return Math.sqrt(n);
+          case "nplusm":
+            // treat m ~ n for this toy model
+            return 2 * n;
+          default:
+            return n;
+        }
+      }
+
+      const results = [];
+      const algos = config.algorithms.length
+        ? config.algorithms
+        : ["bubble"]; // fallback
+
+      for (const alg of algos) {
+        const label = (ALGORITHMS_BY_TYPE[config.algorithmType] || []).find(
+          (a) => a.value === alg
+        )?.label || alg;
+
+        const cType = complexity[alg] || "n";
+        const baseTime = 1e-7; // base seconds per operation (arbitrary)
+        const baseMem = 10; // base KB
+
+        for (const n of ns) {
+          const factor = complexityFactor(cType, n);
+          const time_seconds = baseTime * factor;
+
+          // Memory usage: proportional to n plus small algorithm-specific factor
+          const memory_rss_kb =
+            baseMem +
+            0.01 * n +
+            (cType === "n2" ? 0.0005 * n * n : 0) +
+            (cType === "nlogn" ? 0.002 * n * Math.log2(n) : 0);
+
+          results.push({
+            label,
+            n,
+            time_seconds,
+            memory_rss_kb,
+          });
+        }
+      }
+
+      return results;
+    }
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -404,7 +485,7 @@
       );
       const valueType = valueTypeSelect.value || "int";
 
-      const result = {
+      const config = {
         algorithmType,
         algorithms,
         storageTypes,
@@ -417,33 +498,15 @@
         },
       };
 
-      output.textContent = "Running benchmarks, please wait...";
+      output.textContent =
+        "Simulating benchmarks in the browser (no server required)...\n\n" +
+        "Configuration:\n" +
+        JSON.stringify(config, null, 2);
       timeChartEl.innerHTML = "";
       memoryChartEl.innerHTML = "";
 
-      fetch("http://127.0.0.1:5000/save-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(result),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success) {
-            output.textContent =
-              (data.message || "Configuration saved successfully.") +
-              "\n\n" +
-              "Configuration:\n" +
-              JSON.stringify(result, null, 2);
-            if (Array.isArray(data.results)) {
-              renderCharts(data.results);
-            }
-          } else {
-            output.textContent = "Failed to save configuration: " + data.error;
-          }
-        })
-        .catch((err) => {
-          output.textContent = "Error while saving configuration: " + err;
-        });
+      const simulatedResults = simulateBenchmarks(config);
+      renderCharts(simulatedResults);
     });
 
     // Initialize algorithms list empty
