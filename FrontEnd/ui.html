@@ -10,7 +10,7 @@
       background: #0f172a;
       color: #e5e7eb;
       margin: 0;
-      padding: 0;
+      padding: 2rem;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -18,7 +18,6 @@
     }
     .container {
       background: #020617;
-      margin: 2rem;
       padding: 2rem 2.5rem;
       border-radius: 1rem;
       box-shadow: 0 20px 45px rgba(15, 23, 42, 0.8);
@@ -33,19 +32,25 @@
     }
     p.description {
       margin-top: 0.25rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       color: #9ca3af;
       font-size: 0.95rem;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
     }
     .field {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.5rem;
+    }
+    .options-grid {
+        display: none; /* Initially hidden */
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.75rem;
+        margin-top: 1.75rem;
     }
     label {
       font-weight: 600;
@@ -55,42 +60,65 @@
     .hint {
       font-size: 0.8rem;
       color: #6b7280;
+      margin-top: -0.2rem;
     }
-    select, button {
+    select {
       border-radius: 0.5rem;
       border: 1px solid #374151;
-      background: #020617;
+      background: #0f172a;
       color: #e5e7eb;
-      padding: 0.5rem 0.75rem;
+      padding: 0.6rem 0.75rem;
       font-size: 0.95rem;
       outline: none;
-      box-shadow: 0 0 0 1px transparent;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      box-shadow: 0 0 0 2px transparent;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     select:focus {
       border-color: #22c55e;
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
     }
-    select[multiple] {
-      min-height: 120px;
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 150px;
+        overflow-y: auto;
+        background: #0f172a;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #374151;
+        transition: opacity 0.2s ease;
     }
-    .select-all-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-top: 0.1rem;
-      font-size: 0.85rem;
-      color: #9ca3af;
+    .checkbox-group.locked {
+        opacity: 0.6;
     }
-    .select-all-row input[type="checkbox"]:disabled + span {
-      opacity: 0.4;
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+    }
+    .checkbox-item label {
+        transition: color 0.2s ease;
+    }
+    .checkbox-item input {
+        accent-color: #22c55e;
+    }
+    .checkbox-item input:disabled + label {
+        color: #6b7280;
+        cursor: not-allowed;
     }
     button {
       margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
       background: linear-gradient(to right, #22c55e, #16a34a);
       border: none;
+      border-radius: 0.5rem;
       cursor: pointer;
       font-weight: 600;
+      color: #f9fafb;
+      font-size: 1rem;
+      transition: background 0.15s ease;
     }
     button:hover {
       background: linear-gradient(to right, #16a34a, #15803d);
@@ -102,6 +130,8 @@
       font-size: 0.9rem;
       color: #d1d5db;
       white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
     }
   </style>
 </head>
@@ -109,13 +139,11 @@
   <div class="container">
     <h1>Algorithm Configuration</h1>
     <p class="description">
-      Choose the algorithm type and related options. Only one <strong>Select All</strong> can be active across
-      Algorithms, Data Storage, and Type of Data.
+      Select an algorithm type to configure your benchmark. You may compare multiple items from one category at a time (e.g., multiple algorithms vs. one data type).
     </p>
 
     <form id="algoForm">
-      <div class="grid">
-        <!-- Algorithm Type (single select) -->
+      <div class="form-grid">
         <div class="field">
           <label for="algorithmType">Algorithm Type</label>
           <select id="algorithmType" name="algorithmType">
@@ -124,393 +152,195 @@
             <option value="searching">Searching</option>
             <option value="graph">Graph</option>
           </select>
-          <span class="hint">This controls which algorithms appear in the list.</span>
+          <span class="hint">This controls which algorithms and options are available.</span>
         </div>
+      </div>
 
-        <!-- Algorithms (multi-select) -->
+      <div id="additionalOptions" class="options-grid">
         <div class="field">
-          <label for="algorithms">Algorithms</label>
-          <select id="algorithms" name="algorithms" multiple></select>
-          <div class="select-all-row">
-            <input type="checkbox" id="selectAllAlgorithms" />
-            <span>Select ALL Algorithms</span>
-          </div>
-          <span class="hint">Use Ctrl/Shift to select multiple items.</span>
+          <label>Algorithms</label>
+          <div id="algorithms" class="checkbox-group"></div>
+          <span class="hint" data-group="algorithms">Select one or more.</span>
         </div>
-
-        <!-- Data Storage Type (multi-select) -->
         <div class="field">
-          <label for="storageType">Data Storage Type</label>
-          <select id="storageType" name="storageType" multiple>
-            <option value="array">Array</option>
-            <option value="linked_list">Linked List</option>
-            <option value="vector">Vector</option>
-            <option value="list">List</option>
-          </select>
-          <div class="select-all-row">
-            <input type="checkbox" id="selectAllStorage" />
-            <span>Select ALL Storage Types</span>
-          </div>
-          <span class="hint">Choose where your data is stored in memory.</span>
+          <label>Data Storage</label>
+          <div id="storageType" class="checkbox-group"></div>
+           <span class="hint" data-group="storageType">Select one or more.</span>
         </div>
-
-        <!-- Type of Data (multi-select) -->
         <div class="field">
-          <label for="dataType">Type of Data</label>
-          <select id="dataType" name="dataType" multiple>
-            <option value="random">Random</option>
-            <option value="sorted">Sorted</option>
-            <option value="reversed">Reversed</option>
-            <option value="nearly_sorted">Nearly Sorted</option>
-          </select>
-          <div class="select-all-row">
-            <input type="checkbox" id="selectAllDataType" />
-            <span>Select ALL Data Types</span>
-          </div>
-          <span class="hint">This represents the input distribution.</span>
-        </div>
-
-        <!-- Data Type of elements (single select) -->
-        <div class="field">
-          <label for="valueType">Data Type</label>
-          <select id="valueType" name="valueType">
-            <option value="int">Integer</option>
-            <option value="float">Float</option>
-            <option value="char">Character</option>
-            <option value="string">String</option>
-          </select>
-          <span class="hint">Type of each element in the input.</span>
+          <label>Input Data Pattern</label>
+          <div id="dataType" class="checkbox-group"></div>
+          <span class="hint" data-group="dataType">Select one or more.</span>
         </div>
       </div>
 
       <button type="submit">Submit Configuration</button>
-
       <div id="output" class="output"></div>
-
-      <!-- Inline charts -->
       <div id="timeChart" style="margin-top: 1.5rem;"></div>
       <div id="memoryChart" style="margin-top: 1.5rem;"></div>
     </form>
   </div>
 
   <script>
-    // ----- DATA -----
-    const ALGORITHMS_BY_TYPE = {
-      sorting: [
-        { value: "bubble", label: "Bubble Sort" },
-        { value: "selection", label: "Selection Sort" },
-        { value: "insertion", label: "Insertion Sort" },
-        { value: "merge", label: "Merge Sort" },
-        { value: "quick", label: "Quick Sort" },
-        { value: "heap", label: "Heap Sort" },
-      ],
-      searching: [
-        { value: "linear", label: "Linear Search" },
-        { value: "binary", label: "Binary Search" },
-        { value: "jump", label: "Jump Search" },
-        { value: "interpolation", label: "Interpolation Search" },
-      ],
-      graph: [
-        { value: "bfs", label: "Breadth-First Search (BFS)" },
-        { value: "dfs", label: "Depth-First Search (DFS)" },
-        { value: "dijkstra", label: "Dijkstra" },
-        { value: "prims", label: "Prim's" },
-        { value: "kruskal", label: "Kruskal's" },
-      ],
-    };
-
-    // ----- ELEMENTS -----
-    const algorithmTypeSelect = document.getElementById("algorithmType");
-    const algorithmsSelect = document.getElementById("algorithms");
-    const storageTypeSelect = document.getElementById("storageType");
-    const dataTypeSelect = document.getElementById("dataType");
-    const valueTypeSelect = document.getElementById("valueType");
-
-    const selectAllAlgorithms = document.getElementById("selectAllAlgorithms");
-    const selectAllStorage = document.getElementById("selectAllStorage");
-    const selectAllDataType = document.getElementById("selectAllDataType");
+    const ALGORITHMS_BY_TYPE = { sorting: [ { value: "bubble", label: "Bubble Sort" }, { value: "selection", label: "Selection Sort" }, { value: "insertion", label: "Insertion Sort" }, { value: "merge", label: "Merge Sort" }, { value: "quick", label: "Quick Sort" }, { value: "heap", label: "Heap Sort" }, ], searching: [ { value: "linear", label: "Linear Search" }, { value: "binary", label: "Binary Search" }, ], graph: [ { value: "bfs", label: "Breadth-First Search" }, { value: "dfs", label: "Depth-First Search" }, { value: "dijkstra", label: "Dijkstra" }, ], };
+    const STORAGE_TYPES = [ { value: "array", label: "Array" }, { value: "linked_list", label: "Linked List" }, { value: "vector", label: "Vector" }, ];
+    const DATA_TYPES = [ { value: "random", label: "Random" }, { value: "sorted", label: "Sorted" }, { value: "reversed", label: "Reversed" }, { value: "nearly_sorted", label: "Nearly Sorted" }, ];
 
     const form = document.getElementById("algoForm");
+    const algorithmTypeSelect = document.getElementById("algorithmType");
+    const additionalOptions = document.getElementById("additionalOptions");
     const output = document.getElementById("output");
     const timeChartEl = document.getElementById("timeChart");
     const memoryChartEl = document.getElementById("memoryChart");
 
-    // ----- HELPER FUNCTIONS -----
-    function populateAlgorithms(type) {
-      algorithmsSelect.innerHTML = "";
-      if (!type || !ALGORITHMS_BY_TYPE[type]) return;
-      for (const alg of ALGORITHMS_BY_TYPE[type]) {
-        const opt = document.createElement("option");
-        opt.value = alg.value;
-        opt.textContent = alg.label;
-        algorithmsSelect.appendChild(opt);
-      }
-      // When type changes, reset Select All state for algorithms
-      selectAllAlgorithms.checked = false;
+    const selectionGroups = [
+        { name: 'algorithms', container: document.getElementById("algorithms"), hint: document.querySelector('.hint[data-group="algorithms"]') },
+        { name: 'storageType', container: document.getElementById("storageType"), hint: document.querySelector('.hint[data-group="storageType"]') },
+        { name: 'dataType', container: document.getElementById("dataType"), hint: document.querySelector('.hint[data-group="dataType"]') }
+    ];
+
+    function createCheckbox(item, groupName) {
+        const div = document.createElement("div");
+        div.className = "checkbox-item";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.id = `${groupName}-${item.value}`;
+        input.name = groupName;
+        input.value = item.value;
+        const label = document.createElement("label");
+        label.htmlFor = input.id;
+        label.textContent = item.label;
+        div.appendChild(input);
+        div.appendChild(label);
+        return div;
     }
 
-    function setAllOptionsSelected(selectEl, isSelected) {
-      Array.from(selectEl.options).forEach((opt) => {
-        opt.selected = isSelected;
-      });
-    }
-
-    // Keeps checkboxes mutually exclusive in terms of "Select All"
-    function updateSelectAllLocking() {
-      const anyChecked =
-        selectAllAlgorithms.checked ||
-        selectAllStorage.checked ||
-        selectAllDataType.checked;
-
-      // If one is checked, disable the others (but don't uncheck them)
-      // If none is checked, re-enable all
-      if (anyChecked) {
-        const lockedId = selectAllAlgorithms.checked
-          ? "algorithms"
-          : selectAllStorage.checked
-          ? "storage"
-          : "dataType";
-
-        selectAllAlgorithms.disabled = lockedId !== "algorithms";
-        selectAllStorage.disabled = lockedId !== "storage";
-        selectAllDataType.disabled = lockedId !== "dataType";
-      } else {
-        selectAllAlgorithms.disabled = false;
-        selectAllStorage.disabled = false;
-        selectAllDataType.disabled = false;
-      }
-    }
-
-    function handleSelectAllChange(group) {
-      if (group === "algorithms") {
-        if (selectAllAlgorithms.checked) {
-          setAllOptionsSelected(algorithmsSelect, true);
-        }
-      } else if (group === "storage") {
-        if (selectAllStorage.checked) {
-          setAllOptionsSelected(storageTypeSelect, true);
-        }
-      } else if (group === "dataType") {
-        if (selectAllDataType.checked) {
-          setAllOptionsSelected(dataTypeSelect, true);
+    function populateCheckboxes(container, items, groupName) {
+      container.innerHTML = "";
+      if (items) {
+        for (const item of items) {
+            container.appendChild(createCheckbox(item, groupName));
         }
       }
-      updateSelectAllLocking();
     }
 
-    function syncCheckboxWithSelection(selectEl, checkbox) {
-      // If not all options are selected, uncheck the Select All for that group
-      const opts = Array.from(selectEl.options);
-      const allSelected =
-        opts.length > 0 && opts.every((opt) => opt.selected === true);
-      if (!allSelected && checkbox.checked) {
-        checkbox.checked = false;
-        updateSelectAllLocking();
-      }
-    }
+    function updateSelectionLocks() {
+        const selectionCounts = selectionGroups.map(g => ({ ...g, count: document.querySelectorAll(`input[name="${g.name}"]:checked`).length }));
+        const multiSelectGroup = selectionCounts.find(g => g.count > 1);
 
+        if (multiSelectGroup) {
+            selectionCounts.forEach(group => {
+                const isLocked = group.name !== multiSelectGroup.name;
+                group.hint.textContent = isLocked ? "Single selection only." : "Select one or more.";
+                document.querySelectorAll(`input[name="${group.name}"]`).forEach(checkbox => {
+                    checkbox.disabled = isLocked && group.count > 0 && !checkbox.checked;
+                });
+                group.container.classList.toggle('locked', isLocked && group.count > 0);
+            });
+        } else {
+            selectionGroups.forEach(group => {
+                group.hint.textContent = "Select one or more.";
+                group.container.classList.remove('locked');
+                document.querySelectorAll(`input[name="${group.name}"]`).forEach(checkbox => checkbox.disabled = false);
+            });
+        }
+    }
+    
     function renderCharts(results) {
-      if (!Array.isArray(results) || results.length === 0) {
-        timeChartEl.innerHTML = "";
-        memoryChartEl.innerHTML = "";
-        return;
-      }
-
-      // Group by label for separate lines
+      if (!Array.isArray(results) || results.length === 0) { timeChartEl.innerHTML = ""; memoryChartEl.innerHTML = ""; return; }
       const groups = {};
-      for (const row of results) {
-        const key = row.label || "series";
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(row);
-      }
-
-      const timeTraces = [];
-      const memTraces = [];
-
+      for (const row of results) { const key = row.label || "series"; if (!groups[key]) groups[key] = []; groups[key].push(row); }
+      const timeTraces = []; const memTraces = [];
       Object.keys(groups).forEach((label) => {
         const rows = groups[label].slice().sort((a, b) => a.n - b.n);
-        const x = rows.map((r) => r.n);
-        const yTime = rows.map((r) => r.time_seconds);
-        const yMem = rows.map((r) => r.memory_rss_kb);
-
-        timeTraces.push({
-          x,
-          y: yTime,
-          mode: "lines+markers",
-          name: label,
-        });
-
-        memTraces.push({
-          x,
-          y: yMem,
-          mode: "lines+markers",
-          name: label,
-        });
+        const x = rows.map((r) => r.n); const yTime = rows.map((r) => r.time_seconds); const yMem = rows.map((r) => r.memory_rss_kb);
+        timeTraces.push({ x, y: yTime, mode: "lines+markers", name: label });
+        memTraces.push({ x, y: yMem, mode: "lines+markers", name: label });
       });
-
-      const timeLayout = {
-        title: "Time vs Input Size (n)",
-        xaxis: { title: "Input size (n)" },
-        yaxis: { title: "Time (seconds)" },
-      };
-
-      const memLayout = {
-        title: "Memory (RSS KB) vs Input Size (n)",
-        xaxis: { title: "Input size (n)" },
-        yaxis: { title: "Memory (KB)" },
-      };
-
-      Plotly.newPlot(timeChartEl, timeTraces, timeLayout, { responsive: true });
-      Plotly.newPlot(memoryChartEl, memTraces, memLayout, { responsive: true });
+      const layoutOptions = { paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#e5e7eb' }, xaxis: { title: "Input size (n)", gridcolor: '#1f2937' }, };
+      Plotly.newPlot(timeChartEl, timeTraces, { ...layoutOptions, title: "Time vs Input Size (n)", yaxis: { title: "Time (seconds)", gridcolor: '#1f2937' } }, { responsive: true });
+      Plotly.newPlot(memoryChartEl, memTraces, { ...layoutOptions, title: "Memory (RSS KB) vs Input Size (n)", yaxis: { title: "Memory (KB)", gridcolor: '#1f2937' } }, { responsive: true });
     }
 
-    // ----- EVENT LISTENERS -----
+    function simulateBenchmarks(config, comparisonVariable) {
+        const ns = [100, 500, 1000, 5000, 10000];
+        const complexity = { bubble: "n2", selection: "n2", insertion: "n2", merge: "nlogn", quick: "nlogn", heap: "nlogn", linear: "n", binary: "logn", bfs: "nplusm", dfs: "nplusm", dijkstra: "nlogn" };
+        const results = [];
+        
+        const fullLabel = (dict, val) => (dict.find(i => i.value === val) || { label: val }).label;
+        const getDict = (key) => key === 'algorithms' ? ALGORITHMS_BY_TYPE[config.algorithmType] : (key === 'storageTypes' ? STORAGE_TYPES : DATA_TYPES);
+
+        const base = {
+            algorithms: config.algorithms.length > 0 ? config.algorithms[0] : 'bubble',
+            storageTypes: config.storageTypes.length > 0 ? config.storageTypes[0] : 'array',
+            dataTypes: config.dataTypes.length > 0 ? config.dataTypes[0] : 'random'
+        };
+
+        const loopOver = config[comparisonVariable] && config[comparisonVariable].length > 0 ? config[comparisonVariable] : [base[comparisonVariable]];
+
+        for (const item of loopOver) {
+            const current = { ...base, [comparisonVariable]: item };
+            let label = fullLabel(getDict('algorithms'), current.algorithms);
+
+            if (comparisonVariable === 'storageTypes') {
+                label += ` (${fullLabel(STORAGE_TYPES, item)})`;
+            } else if (comparisonVariable === 'dataTypes') {
+                label += ` (${fullLabel(DATA_TYPES, item)})`;
+            }
+
+            const cType = complexity[current.algorithms] || 'n';
+            const baseTime = 1e-7;
+            const baseMem = 10;
+            
+            for (const n of ns) {
+                const factor = cType === 'n2' ? n*n : (cType === 'nlogn' ? n*Math.log2(n) : (cType === 'logn' ? Math.log2(n) : (cType === 'nplusm' ? 2*n : n)));
+                results.push({
+                    label,
+                    n,
+                    time_seconds: baseTime * factor * (Math.random() * 0.4 + 0.8),
+                    memory_rss_kb: baseMem + (0.01 * n) + (Math.random() * 5),
+                });
+            }
+        }
+        return results;
+    }
+    
     algorithmTypeSelect.addEventListener("change", (e) => {
-      populateAlgorithms(e.target.value);
+      const type = e.target.value;
+      if (type) {
+        populateCheckboxes(selectionGroups[0].container, ALGORITHMS_BY_TYPE[type], 'algorithms');
+        additionalOptions.style.display = "grid";
+      } else {
+        additionalOptions.style.display = "none";
+      }
+      updateSelectionLocks();
     });
 
-    selectAllAlgorithms.addEventListener("change", () =>
-      handleSelectAllChange("algorithms")
-    );
-    selectAllStorage.addEventListener("change", () =>
-      handleSelectAllChange("storage")
-    );
-    selectAllDataType.addEventListener("change", () =>
-      handleSelectAllChange("dataType")
-    );
-
-    algorithmsSelect.addEventListener("change", () =>
-      syncCheckboxWithSelection(algorithmsSelect, selectAllAlgorithms)
-    );
-    storageTypeSelect.addEventListener("change", () =>
-      syncCheckboxWithSelection(storageTypeSelect, selectAllStorage)
-    );
-    dataTypeSelect.addEventListener("change", () =>
-      syncCheckboxWithSelection(dataTypeSelect, selectAllDataType)
-    );
-
-    // ----- SIMPLE CLIENT-SIDE BENCHMARK SIMULATION -----
-    // This does NOT run real Python benchmarks; it approximates
-    // time / memory using simple complexity-based formulas so the
-    // page can work by just opening ui.html (no backend needed).
-    function simulateBenchmarks(config) {
-      const ns = [100, 500, 1000, 5000, 10000];
-
-      // Very rough complexity hints per algorithm
-      const complexity = {
-        bubble: "n2",
-        selection: "n2",
-        insertion: "n2",
-        merge: "nlogn",
-        quick: "nlogn",
-        heap: "nlogn",
-        linear: "n",
-        binary: "logn",
-        jump: "sqrt",
-        interpolation: "logn",
-        bfs: "nplusm",
-        dfs: "nplusm",
-        dijkstra: "nlogn",
-        prims: "n2",
-        kruskal: "nlogn",
-      };
-
-      function complexityFactor(type, n) {
-        switch (type) {
-          case "n2":
-            return n * n;
-          case "nlogn":
-            return n * Math.log2(n);
-          case "logn":
-            return Math.log2(n);
-          case "sqrt":
-            return Math.sqrt(n);
-          case "nplusm":
-            // treat m ~ n for this toy model
-            return 2 * n;
-          default:
-            return n;
+    additionalOptions.addEventListener('change', (e) => {
+        if (e.target.type === 'checkbox') {
+            updateSelectionLocks();
         }
-      }
-
-      const results = [];
-      const algos = config.algorithms.length
-        ? config.algorithms
-        : ["bubble"]; // fallback
-
-      for (const alg of algos) {
-        const label = (ALGORITHMS_BY_TYPE[config.algorithmType] || []).find(
-          (a) => a.value === alg
-        )?.label || alg;
-
-        const cType = complexity[alg] || "n";
-        const baseTime = 1e-7; // base seconds per operation (arbitrary)
-        const baseMem = 10; // base KB
-
-        for (const n of ns) {
-          const factor = complexityFactor(cType, n);
-          const time_seconds = baseTime * factor;
-
-          // Memory usage: proportional to n plus small algorithm-specific factor
-          const memory_rss_kb =
-            baseMem +
-            0.01 * n +
-            (cType === "n2" ? 0.0005 * n * n : 0) +
-            (cType === "nlogn" ? 0.002 * n * Math.log2(n) : 0);
-
-          results.push({
-            label,
-            n,
-            time_seconds,
-            memory_rss_kb,
-          });
-        }
-      }
-
-      return results;
-    }
+    });
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+      const getSelected = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
+      const config = { algorithmType: algorithmTypeSelect.value, algorithms: getSelected('algorithms'), storageTypes: getSelected('storageType'), dataTypes: getSelected('dataType'), };
 
-      const algorithmType = algorithmTypeSelect.value || null;
-      const algorithms = Array.from(algorithmsSelect.selectedOptions).map(
-        (o) => o.value
-      );
-      const storageTypes = Array.from(storageTypeSelect.selectedOptions).map(
-        (o) => o.value
-      );
-      const dataTypes = Array.from(dataTypeSelect.selectedOptions).map(
-        (o) => o.value
-      );
-      const valueType = valueTypeSelect.value || "int";
+      let comparisonVariable = 'algorithms';
+      if (config.storageTypes.length > 1) comparisonVariable = 'storageTypes';
+      else if (config.dataTypes.length > 1) comparisonVariable = 'dataTypes';
 
-      const config = {
-        algorithmType,
-        algorithms,
-        storageTypes,
-        dataTypes,
-        valueType,
-        selectAll: {
-          algorithms: selectAllAlgorithms.checked,
-          storageTypes: selectAllStorage.checked,
-          dataTypes: selectAllDataType.checked,
-        },
-      };
-
-      output.textContent =
-        "Simulating benchmarks in the browser (no server required)...\n\n" +
-        "Configuration:\n" +
-        JSON.stringify(config, null, 2);
-      timeChartEl.innerHTML = "";
-      memoryChartEl.innerHTML = "";
-
-      const simulatedResults = simulateBenchmarks(config);
+      output.textContent = "Simulating benchmarks in the browser...\n\nConfiguration:\n" + JSON.stringify(config, null, 2);
+      timeChartEl.innerHTML = ""; memoryChartEl.innerHTML = "";
+      
+      const simulatedResults = simulateBenchmarks(config, comparisonVariable);
       renderCharts(simulatedResults);
     });
 
-    // Initialize algorithms list empty
-    populateAlgorithms("");
+    populateCheckboxes(selectionGroups[1].container, STORAGE_TYPES, 'storageType');
+    populateCheckboxes(selectionGroups[2].container, DATA_TYPES, 'dataType');
+    additionalOptions.style.display = "none";
   </script>
 </body>
 </html>
