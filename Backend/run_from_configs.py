@@ -5,6 +5,9 @@ and generate interactive n vs time and n vs memory plots.
 - Supports Algorithm Type = "sorting" with:
     - "bubble"    -> Bubble Sort
     - "insertion" -> Insertion Sort
+    - "counting"  -> Counting Sort
+    - "radix"     -> Radix Sort
+    - "bucket"    -> Bucket Sort
 - Data types: "random", "sorted", "reversed", "nearly_sorted".
 - Data storage type is only used as a label (algorithms use Python lists).
 """
