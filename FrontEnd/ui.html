@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
+      background: #37353E;
       color: #e5e7eb;
       margin: 0;
       padding: 2rem;
@@ -17,13 +17,16 @@
       min-height: 100vh;
     }
     .container {
-      background: #020617;
+      background: #000000;
       padding: 2rem 2.5rem;
       border-radius: 1rem;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.8);
-      max-width: 900px;
+      box-shadow: 0 20px 45px rgba(19, 35, 70, 0.8);
+      max-width: 1800px;
       width: 100%;
       border: 1px solid #1f2937;
+    }
+    .container_additional {
+      margin-top: 1rem;
     }
     h1 {
       margin-top: 0;
@@ -40,6 +43,37 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 1.75rem;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 1.5rem;
+      align-items: start;
+      margin-top: 0.5rem;
+    }
+    .controls {
+      min-width: 0;
+    }
+    .charts {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #timeChart, #memoryChart {
+        background: transparent;
+        padding: 2rem 2.5rem;
+        border-radius: 0;
+        box-shadow: none;
+        max-width: 1800px;
+        width: 100%;
+        border: none;
+      height: 450px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .charts > div { height: 260px; }
+      #timeChart, #memoryChart { min-height: 260px; }
     }
     .field {
       display: flex;
@@ -143,48 +177,61 @@
     </p>
 
     <form id="algoForm">
-      <div class="form-grid">
-        <div class="field">
-          <label for="algorithmType">Algorithm Type</label>
-          <select id="algorithmType" name="algorithmType">
-            <option value="">-- Select Algorithm Type --</option>
-            <option value="sorting">Sorting</option>
-            <option value="searching">Searching</option>
-            <option value="graph">Graph</option>
-          </select>
-          <span class="hint">This controls which algorithms and options are available.</span>
+      <div class="main-grid">
+        <div class="controls">
+          <div class="form-grid">
+            <div class="field">
+              <label for="algorithmType">Algorithm Type</label>
+              <select id="algorithmType" name="algorithmType">
+                <option value="">-- Select Algorithm Type --</option>
+                <option value="sorting">Sorting</option>
+                <option value="searching">Searching</option>
+                <option value="graph">Graph</option>
+              </select>
+              <span class="hint">This controls which algorithms and options are available.</span>
+            </div>
+          </div>
+
+          <div id="additionalOptions" class="options-grid">
+            <div class="field">
+              <label>Algorithms</label>
+              <div id="algorithms" class="checkbox-group"></div>
+              <span class="hint" data-group="algorithms">Select one or more.</span>
+            </div>
+            <div class="field">
+              <label>Data Storage</label>
+              <div id="storageType" class="checkbox-group"></div>
+               <span class="hint" data-group="storageType">Select one or more.</span>
+            </div>
+            <div class="field">
+              <label>Input Data Pattern</label>
+              <div id="dataType" class="checkbox-group"></div>
+              <span class="hint" data-group="dataType">Select one or more.</span>
+            </div>
+            <div class="field">
+              <label>Value Type</label>
+              <div id="valueType" class="radio-group"></div>
+              <span class="hint" data-group="valueType">Select one.</span>
+            </div>
+          </div>
+
+          <button type="submit">Submit Configuration</button>
+          <div id="output" class="output"></div>
+        </div>
+
+        <div class="charts">
+          <div id="timeChart"></div>
+          <div id="memoryChart"></div>
         </div>
       </div>
-
-      <div id="additionalOptions" class="options-grid">
-        <div class="field">
-          <label>Algorithms</label>
-          <div id="algorithms" class="checkbox-group"></div>
-          <span class="hint" data-group="algorithms">Select one or more.</span>
-        </div>
-        <div class="field">
-          <label>Data Storage</label>
-          <div id="storageType" class="checkbox-group"></div>
-           <span class="hint" data-group="storageType">Select one or more.</span>
-        </div>
-        <div class="field">
-          <label>Input Data Pattern</label>
-          <div id="dataType" class="checkbox-group"></div>
-          <span class="hint" data-group="dataType">Select one or more.</span>
-        </div>
-      </div>
-
-      <button type="submit">Submit Configuration</button>
-      <div id="output" class="output"></div>
-      <div id="timeChart" style="margin-top: 1.5rem;"></div>
-      <div id="memoryChart" style="margin-top: 1.5rem;"></div>
     </form>
   </div>
 
   <script>
-    const ALGORITHMS_BY_TYPE = { sorting: [ { value: "bubble", label: "Bubble Sort" }, { value: "selection", label: "Selection Sort" }, { value: "insertion", label: "Insertion Sort" }, { value: "merge", label: "Merge Sort" }, { value: "quick", label: "Quick Sort" }, { value: "heap", label: "Heap Sort" }, { value: "counting", label: "Counting Sort" }, { value: "radix", label: "Radix Sort" }, { value: "bucket", label: "Bucket Sort" }, ], searching: [ { value: "linear", label: "Linear Search" }, { value: "binary", label: "Binary Search" }, ], graph: [ { value: "bfs", label: "Breadth-First Search" }, { value: "dfs", label: "Depth-First Search" }, { value: "dijkstra", label: "Dijkstra" }, ], };
+    const ALGORITHMS_BY_TYPE = { sorting: [ { value: "bubble", label: "Bubble Sort" }, { value: "selection", label: "Selection Sort" }, { value: "insertion", label: "Insertion Sort" }, { value: "merge", label: "Merge Sort" }, { value: "quick", label: "Quick Sort" }, { value: "heap", label: "Heap Sort" }, { value: "counting", label: "Counting Sort" }, { value: "radix", label: "Radix Sort" }, { value: "bucket", label: "Bucket Sort" }, ], searching: [ { value: "linear", label: "Linear Search" }, { value: "binary", label: "Binary Search" }, ], graph: [ { value: "bfs", label: "Breadth-First Search" }, { value: "dfs", label: "Depth-First Search" }, { value: "dijkstra", label: "Dijkstra" }, ], }; 
     const STORAGE_TYPES = [ { value: "array", label: "Array" }, { value: "linked_list", label: "Linked List" }, { value: "vector", label: "Vector" }, ];
     const DATA_TYPES = [ { value: "random", label: "Random" }, { value: "sorted", label: "Sorted" }, { value: "reversed", label: "Reversed" }, { value: "nearly_sorted", label: "Nearly Sorted" }, ];
+    const VALUE_TYPES = [ { value: "int", label: "Integer" }, { value: "float", label: "Float" }, { value: "char", label: "Char" }, { value: "string", label: "String" } ];
 
     const form = document.getElementById("algoForm");
     const algorithmTypeSelect = document.getElementById("algorithmType");
@@ -224,6 +271,35 @@
       }
     }
 
+    function createRadio(item, groupName) {
+        const div = document.createElement("div");
+        div.className = "checkbox-item";
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.id = `${groupName}-${item.value}`;
+        input.name = groupName;
+        input.value = item.value;
+        const label = document.createElement("label");
+        label.htmlFor = input.id;
+        label.textContent = item.label;
+        div.appendChild(input);
+        div.appendChild(label);
+        return div;
+    }
+
+    function populateRadios(container, items, groupName, defaultValue) {
+      container.innerHTML = "";
+      if (items) {
+        for (const item of items) {
+            container.appendChild(createRadio(item, groupName));
+        }
+      }
+      if (defaultValue) {
+        const el = container.querySelector(`input[name="${groupName}"][value="${defaultValue}"]`);
+        if (el) el.checked = true;
+      }
+    }
+
     function updateSelectionLocks() {
         const selectionCounts = selectionGroups.map(g => ({ ...g, count: document.querySelectorAll(`input[name="${g.name}"]:checked`).length }));
         const multiSelectGroup = selectionCounts.find(g => g.count > 1);
@@ -247,26 +323,48 @@
     }
     
     function renderCharts(results) {
+      // Render time and tracemalloc-only memory charts
       if (!Array.isArray(results) || results.length === 0) { timeChartEl.innerHTML = ""; memoryChartEl.innerHTML = ""; return; }
       const groups = {};
       for (const row of results) { const key = row.label || "series"; if (!groups[key]) groups[key] = []; groups[key].push(row); }
       const timeTraces = []; const memTraces = [];
+
       Object.keys(groups).forEach((label) => {
         const rows = groups[label].slice().sort((a, b) => a.n - b.n);
-        const x = rows.map((r) => r.n); const yTime = rows.map((r) => r.time_seconds); const yMem = rows.map((r) => r.memory_rss_kb);
+        const x = rows.map((r) => r.n);
+        const yTime = rows.map((r) => r.time_seconds);
+        const yMem = rows.map((r) => (r.tracemalloc_peak_kb !== undefined ? r.tracemalloc_peak_kb : r.memory_rss_kb));
         timeTraces.push({ x, y: yTime, mode: "lines+markers", name: label });
         memTraces.push({ x, y: yMem, mode: "lines+markers", name: label });
       });
+
       const layoutOptions = { paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#e5e7eb' }, xaxis: { title: "Input size (n)", gridcolor: '#1f2937' }, };
       Plotly.newPlot(timeChartEl, timeTraces, { ...layoutOptions, title: "Time vs Input Size (n)", yaxis: { title: "Time (seconds)", gridcolor: '#1f2937' } }, { responsive: true });
-      Plotly.newPlot(memoryChartEl, memTraces, { ...layoutOptions, title: "Memory (RSS KB) vs Input Size (n)", yaxis: { title: "Memory (KB)", gridcolor: '#1f2937' } }, { responsive: true });
+
+      Plotly.newPlot(memoryChartEl, memTraces, { ...layoutOptions, title: "Memory (Tracemalloc peak KB) vs Input Size (n)", yaxis: { title: "Memory (KB)", gridcolor: '#1f2937' } }, { responsive: true });
     }
 
+    // current memory metric selection (default to tracemalloc which reflects Python allocations)
+    let memoryMetric = 'tracemalloc';
+    // keep last rendered results so toggling metric re-renders easily
+    let lastChartResults = null;
+
     function simulateBenchmarks(config, comparisonVariable) {
-        const ns = [100, 500, 1000, 5000, 10000];
-        const complexity = { bubble: "n2", selection: "n2", insertion: "n2", merge: "nlogn", quick: "nlogn", heap: "nlogn", linear: "n", binary: "logn", bfs: "nplusm", dfs: "nplusm", dijkstra: "nlogn" };
+        // generate 100 log-spaced industrial-scale n values (1e4 → 1e7)
+        const ns = (() => {
+          const count = 100;
+          const min = 1e4;      // 10,000
+          const max = 1e7;      // 10,000,000
+          const arr = new Array(count);
+          for (let i = 0; i < count; i++) {
+            arr[i] = Math.round(Math.exp(Math.log(min) + (i / (count - 1)) * (Math.log(max) - Math.log(min))));
+          }
+          return arr;
+        })();
+        console.debug('ns:', ns.length, 'values from', ns[0], 'to', ns[ns.length-1]);
+        const complexity = { bubble: "n2", selection: "n2", insertion: "n2", merge: "nlogn", quick: "nlogn", heap: "nlogn", counting: "n", radix: "n", bucket: "nlogn", linear: "n", binary: "logn", bfs: "nplusm", dfs: "nplusm", dijkstra: "nlogn" };
         const results = [];
-        
+
         const fullLabel = (dict, val) => (dict.find(i => i.value === val) || { label: val }).label;
         const getDict = (key) => key === 'algorithms' ? ALGORITHMS_BY_TYPE[config.algorithmType] : (key === 'storageTypes' ? STORAGE_TYPES : DATA_TYPES);
 
@@ -291,6 +389,8 @@
             const cType = complexity[current.algorithms] || 'n';
             const baseTime = 1e-7;
             const baseMem = 10;
+            const memFactorMap = { n2: 0.0005, nlogn: 0.001, n: 0.0005, logn: 0.0001, nplusm: 0.0005 };
+            const memFactor = memFactorMap[cType] || 0.0005;
             
             for (const n of ns) {
                 const factor = cType === 'n2' ? n*n : (cType === 'nlogn' ? n*Math.log2(n) : (cType === 'logn' ? Math.log2(n) : (cType === 'nplusm' ? 2*n : n)));
@@ -299,12 +399,13 @@
                     n,
                     time_seconds: baseTime * factor * (Math.random() * 0.4 + 0.8),
                     memory_rss_kb: baseMem + (0.01 * n) + (Math.random() * 5),
+                    tracemalloc_peak_kb: Math.round(baseMem + (memFactor * n) + (Math.random() * Math.max(1, 0.01 * n)))
                 });
             }
         }
         return results;
     }
-    
+
     algorithmTypeSelect.addEventListener("change", (e) => {
       const type = e.target.value;
       if (type) {
@@ -325,7 +426,7 @@
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const getSelected = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value);
-      const config = { algorithmType: algorithmTypeSelect.value, algorithms: getSelected('algorithms'), storageTypes: getSelected('storageType'), dataTypes: getSelected('dataType'), };
+      const config = { algorithmType: algorithmTypeSelect.value, algorithms: getSelected('algorithms'), storageTypes: getSelected('storageType'), dataTypes: getSelected('dataType'), valueType: (document.querySelector('input[name="valueType"]:checked') || { value: 'int' }).value };
 
       let comparisonVariable = 'algorithms';
       if (config.storageTypes.length > 1) comparisonVariable = 'storageTypes';
@@ -340,6 +441,7 @@
 
     populateCheckboxes(selectionGroups[1].container, STORAGE_TYPES, 'storageType');
     populateCheckboxes(selectionGroups[2].container, DATA_TYPES, 'dataType');
+    populateRadios(document.getElementById('valueType'), VALUE_TYPES, 'valueType', 'int');
     additionalOptions.style.display = "none";
   </script>
 </body>

@@ -1,45 +1,43 @@
 from typing import List, Any
 
 
-def counting_sort_for_radix(arr: List[Any], exp: int):
-    """
-    A function to do counting sort of arr[] according to
-    the digit represented by exp.
-    """
-    n = len(arr)
-    output = [0] * n
-    count = [0] * 10
-
-    for i in range(n):
-        index = arr[i] // exp
-        count[index % 10] += 1
-
-    for i in range(1, 10):
-        count[i] += count[i - 1]
-
-    i = n - 1
-    while i >= 0:
-        index = arr[i] // exp
-        output[count[index % 10] - 1] = arr[i]
-        count[index % 10] -= 1
-        i -= 1
-
-    for i in range(n):
-        arr[i] = output[i]
+def _radix_sort_positive(arr: List[int]) -> List[int]:
+    """Helper: radix sort for non-negative integers (LSD base 10)."""
+    if not arr:
+        return arr
+    max_val = max(arr)
+    exp = 1
+    out = list(arr)
+    while max_val // exp > 0:
+        buckets = [[] for _ in range(10)]
+        for num in out:
+            buckets[(num // exp) % 10].append(num)
+        out = [n for bucket in buckets for n in bucket]
+        exp *= 10
+    return out
 
 
-def radix_sort(arr: List[Any]) -> List[Any]:
-    """
-    Main function to implement radix sort.
+def radix_sort(arr: List[int]) -> List[int]:
+    """Radix sort supporting integers (handles negatives).
+
+    - Splits negatives and positives, uses LSD radix on absolute values for positives.
+    - Raises ValueError for non-integer elements.
     """
     if not arr:
-        return []
+        return arr
 
-    max_val = max(arr)
+    if not all(isinstance(x, int) for x in arr):
+        raise ValueError("radix_sort only supports integers")
 
-    exp = 1
-    while max_val // exp > 0:
-        counting_sort_for_radix(arr, exp)
-        exp *= 10
-    
-    return arr
+    negatives = [abs(x) for x in arr if x < 0]
+    positives = [x for x in arr if x >= 0]
+
+    pos_sorted = _radix_sort_positive(positives)
+    if negatives:
+        neg_sorted = _radix_sort_positive(negatives)
+        # Convert back to negatives and reverse to keep proper ordering
+        neg_sorted = [-x for x in reversed(neg_sorted)]
+    else:
+        neg_sorted = []
+
+    return neg_sorted + pos_sorted

@@ -36,7 +36,9 @@ import psutil  # type: ignore
 import pandas as pd  # type: ignore
 import plotly.express as px  # type: ignore
 
-from Backend.algorithms.Sorting import SORTING_ALGOS
+from Algorithms.Sorting import SORTING_ALGOS
+from Algorithms.Searching import SEARCHING_ALGOS
+from Algorithms.Graph import GRAPH_ALGOS
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -51,6 +53,8 @@ class BenchmarkConfig:
     data_types: List[str]
     value_type: str
     select_all: Dict[str, bool]
+    sizes: List[int] = None
+    force: bool = False
 
 
 def load_latest_config(path: Path) -> BenchmarkConfig:
@@ -79,6 +83,8 @@ def load_latest_config(path: Path) -> BenchmarkConfig:
         data_types=list(cfg.get("dataTypes") or []),
         value_type=cfg.get("valueType") or "int",
         select_all=dict(cfg.get("selectAll") or {}),
+        sizes=list(cfg.get("sizes") or []),
+        force=bool(cfg.get("force", False)),
     )
 
 
@@ -153,6 +159,62 @@ def build_sizes() -> List[int]:
     return sizes
 
 
+def build_search_sizes() -> List[int]:
+    """Build sizes more suitable for searching benchmarks (wider range)."""
+    sizes = [10, 50, 100, 200, 500, 1000, 2000, 5000, 10000]
+    n = 20000
+    while n <= 1000000:
+        sizes.append(n)
+        n *= 2
+    return sizes
+
+
+def _max_for_complexity(c: str) -> int:
+    if c == 'n2':
+        return 20000
+    if c == 'nlogn':
+        return 1_000_000
+    if c == 'n':
+        return 10_000_000
+    if c == 'logn':
+        return 10_000_000
+    return 1_000_000
+
+
+def get_allowed_sizes(cfg: BenchmarkConfig, algos: List[str], *, default_for_search: bool = False) -> List[int]:
+    """Return a safe list of sizes based on requested cfg and algorithm complexities.
+
+    If cfg.sizes is provided, it is filtered by safe caps unless cfg.force is True.
+    Otherwise an appropriate default (build_sizes / build_search_sizes) is returned.
+    """
+    complexity_map = {
+        'bubble': 'n2', 'selection': 'n2', 'insertion': 'n2',
+        'merge': 'nlogn', 'quick': 'nlogn', 'heap': 'nlogn',
+        'linear': 'n', 'binary': 'logn',
+        # graph algorithms
+        'bfs': 'nplusm', 'dfs': 'nplusm', 'dijkstra': 'nlogn',
+    }
+
+    if cfg.sizes:
+        sizes = list(cfg.sizes)
+        if cfg.force:
+            return sizes
+        # choose the most restrictive cap among selected algorithms
+        caps = [_max_for_complexity(complexity_map.get(a, 'n')) for a in algos]
+        max_allowed = min(caps) if caps else 1_000_000
+        filtered = [s for s in sizes if isinstance(s, int) and s > 0 and s <= max_allowed]
+        if len(filtered) < len(sizes):
+            print(f"[warning] Some requested sizes exceeded safety cap {max_allowed} for selected algorithms; filtered out {len(sizes)-len(filtered)} sizes.")
+        if not filtered:
+            raise ValueError(f"All requested sizes exceed safety caps. Either reduce sizes or set force=True (cap={max_allowed}).")
+        return filtered
+
+    # no sizes requested; return defaults
+    if default_for_search:
+        return build_search_sizes()
+    return build_sizes()
+
+
 def run_benchmarks(cfg: BenchmarkConfig) -> pd.DataFrame:
     """Dispatch to the appropriate benchmark suite based on algorithm_type."""
     if cfg.algorithm_type == "sorting":
@@ -164,7 +226,7 @@ def run_benchmarks(cfg: BenchmarkConfig) -> pd.DataFrame:
         data_types = cfg.data_types or ["random"]
         storage_types = cfg.storage_types or ["array"]
 
-        sizes = build_sizes()
+        sizes = get_allowed_sizes(cfg, algos, default_for_search=False)
         rows: List[Dict[str, Any]] = []
 
         print(f"[sorting] Using algorithms: {algos}")
@@ -218,11 +280,154 @@ def run_benchmarks(cfg: BenchmarkConfig) -> pd.DataFrame:
 
         return pd.DataFrame(rows)
 
-    # For now, we only support sorting in the centralized runner.
-    # Other algorithmType values (searching, graph) can be added later.
+    if cfg.algorithm_type == "searching":
+        algos = cfg.algorithms or list(SEARCHING_ALGOS.keys())
+        algos = [a for a in algos if a in SEARCHING_ALGOS]
+        if not algos:
+            raise ValueError("No supported searching algorithms selected.")
+
+        data_types = cfg.data_types or ["random"]
+        storage_types = cfg.storage_types or ["array"]
+
+        sizes = get_allowed_sizes(cfg, algos, default_for_search=True)
+        rows: List[Dict[str, Any]] = []
+
+        print(f"[searching] Using algorithms: {algos}")
+        print(f"[searching] Using data types: {data_types}")
+        print(f"[searching] Using storage types (labels only): {storage_types}")
+
+        MAX_TIME_PER_RUN = 2.0  # seconds per run (same safety guard)
+
+        for n in sizes:
+            print(f"\n=== n = {n} ===")
+            for data_type in data_types:
+                data = generate_data(n, data_type, cfg.value_type)
+                for storage in storage_types:
+                    for algo_name in algos:
+                        search_func = SEARCHING_ALGOS[algo_name]
+                        # binary search requires sorted input
+                        if algo_name == 'binary':
+                            data_to_use = sorted(data)
+                        else:
+                            data_to_use = list(data)
+
+                        if not data_to_use:
+                            continue
+
+                        target = data_to_use[random.randrange(len(data_to_use))]
+                        label = f"searching:{algo_name} | {storage} | {data_type} | {cfg.value_type}"
+                        print(f"  Measuring {label} ...", end="", flush=True)
+                        try:
+                            # wrap function to accept single arg for measure
+                            metrics = measure(data_to_use, lambda d, f=search_func, t=target: f(list(d), t))
+                        except MemoryError:
+                            print(" MemoryError, stopping.")
+                            return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+                        print(f" time={metrics['time_seconds']:.6f}s mem={metrics['memory_rss_kb']:.2f}KB")
+
+                        rows.append({
+                            "n": n,
+                            "algorithm_type": "searching",
+                            "algorithm": algo_name,
+                            "storage_type": storage,
+                            "data_type": data_type,
+                            "value_type": cfg.value_type,
+                            "label": label,
+                            **metrics,
+                        })
+
+                        if metrics["time_seconds"] > MAX_TIME_PER_RUN:
+                            print(f"    Run exceeded {MAX_TIME_PER_RUN}s. Stopping further sizes to keep runtime reasonable.")
+                            return pd.DataFrame(rows)
+
+        return pd.DataFrame(rows)
+
+    if cfg.algorithm_type == "graph":
+        algos = cfg.algorithms or list(GRAPH_ALGOS.keys())
+        algos = [a for a in algos if a in GRAPH_ALGOS]
+        if not algos:
+            raise ValueError("No supported graph algorithms selected.")
+
+        data_types = cfg.data_types or ["random"]
+        storage_types = cfg.storage_types or ["adjacency_list"]
+
+        sizes = get_allowed_sizes(cfg, algos, default_for_search=False)
+        rows: List[Dict[str, Any]] = []
+
+        print(f"[graph] Using algorithms: {algos}")
+        print(f"[graph] Using data types: {data_types}")
+        print(f"[graph] Using storage types (labels only): {storage_types}")
+
+        MAX_TIME_PER_RUN = 5.0  # seconds per run
+
+        import math
+        import random
+
+        def generate_graph(num_nodes: int, dtype: str = "random"):
+            # simple adjacency list; if weighted (for dijkstra) use (node, weight) tuples
+            nodes = list(range(max(1, int(num_nodes))))
+            g = {i: [] for i in nodes}
+            # choose a small average degree that grows with log(n)
+            avg_deg = max(1, min(len(nodes) - 1, int(2 + math.log2(max(2, len(nodes))))))
+            total_edges = len(nodes) * avg_deg
+            for _ in range(total_edges):
+                u = random.randrange(len(nodes))
+                v = random.randrange(len(nodes))
+                if u == v:
+                    continue
+                if "dijkstra" in algos:
+                    w = random.randint(1, 10)
+                    g[u].append((v, w))
+                else:
+                    g[u].append(v)
+            return g
+
+        for n in sizes:
+            print(f"\n=== nodes = {n} ===")
+            graph = generate_graph(n)
+            start = random.randrange(max(1, n)) if n > 0 else 0
+            for algo_name in algos:
+                graph_func = GRAPH_ALGOS[algo_name]
+                label = f"graph:{algo_name} | nodes={n} | {cfg.value_type}"
+                print(f"  Measuring {label} ...", end="", flush=True)
+                try:
+                    # measure accepts a single-arg function; ignore the passed data and call the graph function directly
+                    metrics = measure([], lambda _d, f=graph_func, g=graph, s=start: f(g, s))
+                except MemoryError:
+                    print(" MemoryError, stopping.")
+                    return pd.DataFrame(rows) if rows else pd.DataFrame()
+
+                print(
+                    f" time={metrics['time_seconds']:.6f}s "
+                    f"mem={metrics['memory_rss_kb']:.2f}KB"
+                )
+
+                rows.append(
+                    {
+                        "n": n,
+                        "algorithm_type": "graph",
+                        "algorithm": algo_name,
+                        "storage_type": storage_types[0],
+                        "data_type": data_types[0],
+                        "value_type": cfg.value_type,
+                        "label": label,
+                        **metrics,
+                    }
+                )
+
+                if metrics["time_seconds"] > MAX_TIME_PER_RUN:
+                    print(
+                        f"    Run exceeded {MAX_TIME_PER_RUN}s. "
+                        "Stopping further sizes to keep runtime reasonable."
+                    )
+                    return pd.DataFrame(rows)
+
+        return pd.DataFrame(rows)
+
     raise ValueError(
         f"Unsupported algorithmType {cfg.algorithm_type!r} in run_benchmarks. "
-        "Currently only 'sorting' is fully wired here."
+        "Supported types: 'sorting', 'searching', 'graph'."
     )
 
 
