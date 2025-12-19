@@ -228,7 +228,7 @@
   </div>
 
   <script>
-    const ALGORITHMS_BY_TYPE = { sorting: [ { value: "bubble", label: "Bubble Sort" }, { value: "selection", label: "Selection Sort" }, { value: "insertion", label: "Insertion Sort" }, { value: "merge", label: "Merge Sort" }, { value: "quick", label: "Quick Sort" }, { value: "heap", label: "Heap Sort" }, ], searching: [ { value: "linear", label: "Linear Search" }, { value: "binary", label: "Binary Search" }, ], graph: [ { value: "bfs", label: "Breadth-First Search" }, { value: "dfs", label: "Depth-First Search" }, { value: "dijkstra", label: "Dijkstra" }, ], };
+    const ALGORITHMS_BY_TYPE = { sorting: [ { value: "bubble", label: "Bubble Sort" }, { value: "selection", label: "Selection Sort" }, { value: "insertion", label: "Insertion Sort" }, { value: "merge", label: "Merge Sort" }, { value: "quick", label: "Quick Sort" }, { value: "heap", label: "Heap Sort" }, { value: "counting", label: "Counting Sort" }, { value: "radix", label: "Radix Sort" }, { value: "bucket", label: "Bucket Sort" }, ], searching: [ { value: "linear", label: "Linear Search" }, { value: "binary", label: "Binary Search" }, ], graph: [ { value: "bfs", label: "Breadth-First Search" }, { value: "dfs", label: "Depth-First Search" }, { value: "dijkstra", label: "Dijkstra" }, ], }; 
     const STORAGE_TYPES = [ { value: "array", label: "Array" }, { value: "linked_list", label: "Linked List" }, { value: "vector", label: "Vector" }, ];
     const DATA_TYPES = [ { value: "random", label: "Random" }, { value: "sorted", label: "Sorted" }, { value: "reversed", label: "Reversed" }, { value: "nearly_sorted", label: "Nearly Sorted" }, ];
     const VALUE_TYPES = [ { value: "int", label: "Integer" }, { value: "float", label: "Float" }, { value: "char", label: "Char" }, { value: "string", label: "String" } ];
@@ -362,7 +362,7 @@
           return arr;
         })();
         console.debug('ns:', ns.length, 'values from', ns[0], 'to', ns[ns.length-1]);
-        const complexity = { bubble: "n2", selection: "n2", insertion: "n2", merge: "nlogn", quick: "nlogn", heap: "nlogn", linear: "n", binary: "logn", bfs: "nplusm", dfs: "nplusm", dijkstra: "nlogn" };
+        const complexity = { bubble: "n2", selection: "n2", insertion: "n2", merge: "nlogn", quick: "nlogn", heap: "nlogn", counting: "n", radix: "n", bucket: "nlogn", linear: "n", binary: "logn", bfs: "nplusm", dfs: "nplusm", dijkstra: "nlogn" };
         const results = [];
 
         const fullLabel = (dict, val) => (dict.find(i => i.value === val) || { label: val }).label;
