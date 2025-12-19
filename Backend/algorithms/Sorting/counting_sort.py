@@ -1,54 +1,34 @@
 from typing import List, Any
 
 
-def counting_sort(arr: List[Any]) -> List[Any]:
-    """
-    Sorts a list of non-negative integers using the Counting Sort algorithm.
+def counting_sort(arr: List[int]) -> List[int]:
+    """Counting sort that supports negative integers.
 
-    Args:
-        arr: The list of non-negative integers to be sorted.
-
-    Returns:
-        A new list containing the sorted integers.
+    - Works with integers only and returns a new sorted list.
+    - Raises ValueError on non-integer elements.
     """
     if not arr:
-        return []
+        return arr
 
-    # 1. Find the maximum element in the input array
-    # This determines the range of values we need to count.
-    max_val = max(arr)
+    # Validate and find min/max
+    try:
+        min_val = min(arr)
+        max_val = max(arr)
+    except TypeError as exc:
+        raise ValueError("counting_sort only supports integers") from exc
 
-    # 2. Initialize a count array with zeros.
-    # The size of the count array will be (max_val + 1) to accommodate
-    # all numbers from 0 to max_val.
-    count = [0] * (max_val + 1)
+    if not all(isinstance(x, int) for x in arr):
+        raise ValueError("counting_sort only supports integers")
 
-    # 3. Populate the count array.
-    # For each element in the input array, increment its corresponding
-    # count in the count array.
-    for num in arr:
-        count[num] += 1
+    offset = -min_val if min_val < 0 else 0
+    range_len = max_val - min_val + 1
+    counts = [0] * range_len
 
-    # 4. Modify the count array to store the actual position of each element
-    # in the output array.
-    # Each element at index `i` in the count array will now store the
-    # sum of counts up to `i`, indicating the last position of `i` in the
-    # sorted array.
-    for i in range(1, len(count)):
-        count[i] += count[i - 1]
+    for x in arr:
+        counts[x + offset] += 1
 
-    # 5. Create the output array.
-    # Initialize an output array of the same size as the input array with zeros.
-    output = [0] * len(arr)
+    out: List[int] = []
+    for i, c in enumerate(counts):
+        out.extend([i - offset] * c)
 
-    # 6. Build the output array.
-    # Iterate through the input array in reverse order to maintain stability
-    # (i.e., elements with the same value retain their relative order).
-    # For each element `num` in `arr`:
-    #   - Decrement `count[num]` to get its correct sorted position.
-    #   - Place `num` at that position in the `output` array.
-    for num in reversed(arr):
-        output[count[num] - 1] = num
-        count[num] -= 1
-
-    return output
+    return out

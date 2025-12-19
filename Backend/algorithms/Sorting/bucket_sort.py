@@ -1,48 +1,38 @@
 from typing import List, Any
 
 
-def bucket_sort(arr: List[Any]) -> List[Any]:
-    if not arr:
-        return []
+def bucket_sort(arr: List[float]) -> List[float]:
+    """Bucket sort supporting numeric data (ints or floats).
 
-    max_val = max(arr)
-    min_val = min(arr)
-    
-    # If all elements are the same, return the array as is.
-    if max_val == min_val:
+    - Distributes elements into `n` buckets (n = len(arr)), sorts each bucket with Python's
+      built-in `sorted()` and concatenates results.
+    - Works for arbitrary numeric ranges (handles negative values).
+    - Raises ValueError for non-numeric elements.
+    """
+    if not arr:
         return arr
 
-    num_buckets = len(arr)
-    if num_buckets == 0: 
-        return []
+    # Validate numeric types
+    try:
+        min_val = min(arr)
+        max_val = max(arr)
+    except TypeError as exc:
+        raise ValueError("bucket_sort only supports numeric values") from exc
 
-    # Calculate the size of each bucket.
-    if isinstance(arr[0], float):
-        bucket_range = (max_val - min_val + 1e-9) / num_buckets
-    else:
-        bucket_range = (max_val - min_val + 1) / num_buckets
-    
-    if bucket_range == 0: 
-        bucket_range = 1
+    n = len(arr)
+    if n == 1 or min_val == max_val:
+        return list(arr)
 
-    # Create empty buckets
-    buckets = [[] for _ in range(num_buckets)]
+    buckets: List[List[float]] = [[] for _ in range(n)]
+    range_span = max_val - min_val
 
-    # Distribute elements into buckets
-    for num in arr:
-        index = int((num - min_val) / bucket_range)
-        
-        if index >= num_buckets:
-            index = num_buckets - 1
-        
-        buckets[index].append(num)
+    for x in arr:
+        # scale to bucket index in [0, n-1]
+        idx = int((x - min_val) / range_span * (n - 1))
+        buckets[idx].append(x)
 
-    # Sort each bucket and concatenate the results
-    sorted_arr = []
-    for bucket in buckets:
-        # Sort each bucket individually. For this, we can use another sorting algorithm.
-        # Python's Timsort is efficient.
-        bucket.sort()
-        sorted_arr.extend(bucket)
-
-    return sorted_arr
+    out: List[float] = []
+    for b in buckets:
+        if b:
+            out.extend(sorted(b))
+    return out
